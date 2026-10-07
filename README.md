@@ -6,8 +6,8 @@
 
 | Thành viên | Phụ trách |
 |---|---|
-| [Tên A] | Tấn công (FGSM, PGD) – `notebooks/02_attacks.ipynb` |
-| [Tên B] | Phòng thủ (Adversarial Training, Input Preprocessing) – `notebooks/03_defenses.ipynb` |
+| Nguyễn Quang Huy | Tấn công (FGSM, PGD) – `notebooks/02_attacks.ipynb` |
+| Nguyễn Phương Đông | Phòng thủ (Adversarial Training, Input Preprocessing) – `notebooks/03_defenses.ipynb` |
 
 ## Cấu trúc thư mục
 
