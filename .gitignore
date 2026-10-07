@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== Project-specific =====
+data/
+checkpoints/
+*.pth
+*.pt
+.ipynb_checkpoints/
+.vscode/
+.DS_Store
