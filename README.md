@@ -7,7 +7,7 @@
 | Thành viên | Phụ trách |
 |---|---|
 | Nguyễn Quang Huy | Tấn công (FGSM, PGD) – `notebooks/02_attacks.ipynb` |
-| Nguyễn Phương Đông | Phòng thủ (Adversarial Training, Input Preprocessing) – `notebooks/03_defenses.ipynb` |
+| Nguyễn Phương Đông | Phòng thủ (Adversarial Training, Input Preprocessing) – `notebooks/03a_adversarial_training.ipynb`, `notebooks/03b_preprocessing.ipynb` |
 
 ## Cấu trúc thư mục
 
@@ -15,18 +15,37 @@
 ├── notebooks/
 │   ├── 01_baseline.ipynb    # Huấn luyện & đánh giá mô hình baseline
 │   ├── 02_attacks.ipynb     # Tấn công FGSM, PGD
-│   └── 03_defenses.ipynb    # Phòng thủ
+│   ├── 03a_adversarial_training.ipynb  # Phòng thủ: Fast-AT / PGD-AT
+│   └── 03b_preprocessing.ipynb         # Phòng thủ: JPEG, giảm bit, blur (+ tấn công thích nghi BPDA)
 ├── src/
 │   ├── config.py            # Toàn bộ thông số dùng chung
 │   ├── models.py            # Normalize + ResNet-18 (CIFAR), build_model()
 │   ├── data.py              # DataLoader CIFAR-10, tập ảnh đánh giá cố định
-│   └── utils.py             # seed, train/evaluate, checkpoint
+│   ├── attacks.py           # fgsm(), pgd()
+│   ├── defenses.py          # Fast-AT, PGD-AT, tiền xử lý, PreprocessedModel (BPDA)
+│   └── utils.py             # seed, train/evaluate, accuracy_under_attack, checkpoint
+├── docs/
+│   └── INTERFACE.md         # Giao diện đã chốt giữa phần tấn công và phòng thủ
 ├── results/                 # Hình, bảng số liệu (PNG/JSON) cho báo cáo
 ├── report/                  # Báo cáo
 └── requirements.txt
 ```
 
 **Quy ước quan trọng:** ảnh đưa vào mô hình luôn nằm trong khoảng **[0, 1]**. Chuẩn hoá mean/std được đặt **bên trong mô hình** (lớp `Normalize` đầu mạng), không nằm trong transform, để epsilon của tấn công có ý nghĩa đúng trên thang pixel (vd. ε = 8/255).
+
+**Giao diện giữa phần tấn công và phòng thủ** (chữ ký `fgsm`/`pgd`, `accuracy_under_attack`, tập đánh giá, tên checkpoint, cấu trúc file `results/*.json`): xem [`docs/INTERFACE.md`](docs/INTERFACE.md).
+
+## Thứ tự chạy notebook
+
+| # | Notebook | Cần có trước | Tạo ra | Thời gian (T4) |
+|---|---|---|---|---|
+| 1 | `01_baseline.ipynb` | – | `baseline_resnet18.pth` | ~40 phút |
+| 2 | `02_attacks.ipynb` | `baseline_resnet18.pth` | kết quả tấn công | – |
+| 3a | `03a_adversarial_training.ipynb` (`MODE="fast"`) | – (so sánh với baseline nếu có) | `adv_fast_resnet18.pth`, `results/adv_training_*` | ~1 giờ |
+| 3a | `03a_adversarial_training.ipynb` (`MODE="pgd"`) | – | `adv_pgd_resnet18.pth` | ~4–5 giờ (tự resume) |
+| 3b | `03b_preprocessing.ipynb` | `baseline_resnet18.pth` | `results/preprocessing_*` | ~10 phút |
+
+Notebook 3a không phụ thuộc baseline nên có thể chạy song song với Notebook 1 (trên tài khoản/phiên Colab khác).
 
 ## Chạy trên Google Colab (khuyến nghị)
 
@@ -66,10 +85,12 @@ Checkpoint lưu ở `./checkpoints`, dữ liệu CIFAR-10 tự tải về `./dat
 | Epsilon (L∞) | 1/255, 2/255, 4/255, 8/255 |
 | PGD | 10 bước, bước nhảy α = 2/255 |
 | Số ảnh đánh giá tấn công | 1000 ảnh test cố định theo seed (`get_eval_subset`) |
+| Adversarial training | 30 epoch, ε = 8/255; Fast-AT α = 10/255, OneCycleLR max_lr = 0.2; PGD-AT 7 bước α = 2/255 |
+| Tiền xử lý | JPEG q ∈ {90, 75, 50}; giảm bit {5, 4, 3}; Gaussian blur σ ∈ {0.5, 1.0} |
 
 ## Quy ước làm việc nhóm
 
-- Mỗi người **chỉ sửa notebook của mình** (A: `02_attacks.ipynb`, B: `03_defenses.ipynb`). Thay đổi trong `src/` cần báo cho người còn lại.
+- Mỗi người **chỉ sửa notebook của mình** (A: `02_attacks.ipynb`, B: `03a_*.ipynb`, `03b_*.ipynb`). `src/attacks.py` hiện là bản tạm do B viết – A được viết lại nhưng giữ nguyên chữ ký hàm (`docs/INTERFACE.md`). Thay đổi trong `src/` cần báo cho người còn lại.
 - Mọi thông số dùng chung đặt trong `src/config.py`, không hard-code trong notebook.
 - **Clear all outputs** trước khi commit notebook (Colab: *Edit → Clear all outputs*; Jupyter: *Kernel → Restart & Clear Output*).
 - **Không commit** dữ liệu (`data/`) và trọng số (`*.pth`, `*.pt`, `checkpoints/`). Trọng số chia sẻ qua thư mục Drive `AdvML_Project`.

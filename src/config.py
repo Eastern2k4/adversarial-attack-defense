@@ -46,6 +46,24 @@ PGD_ALPHA = 2 / 255
 N_EVAL = 1000  # số ảnh test dùng khi đánh giá tấn công
 
 # ---------------------------------------------------------------------------
+# Phòng thủ
+# ---------------------------------------------------------------------------
+# Adversarial training (huấn luyện từ đầu)
+AT_EPOCHS = 30
+AT_EPS = 8 / 255
+FAST_AT_ALPHA = 10 / 255   # bước FGSM của Fast-AT (Wong et al. 2020: alpha = 1.25 * eps)
+AT_PGD_STEPS = 7           # PGD-AT (Madry et al.)
+AT_PGD_ALPHA = 2 / 255
+AT_LR_MAX = 0.2            # max_lr của OneCycleLR cho Fast-AT
+ADV_CKPT_FAST = "adv_fast_resnet18.pth"
+ADV_CKPT_PGD = "adv_pgd_resnet18.pth"
+
+# Tiền xử lý đầu vào (input preprocessing)
+JPEG_QUALITIES = [90, 75, 50]
+BIT_DEPTHS = [5, 4, 3]
+BLUR_SIGMAS = [0.5, 1.0]
+
+# ---------------------------------------------------------------------------
 # CIFAR-10
 # ---------------------------------------------------------------------------
 CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)

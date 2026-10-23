@@ -72,6 +72,27 @@ def evaluate(model, loader, device=None, criterion=None, return_loss=False):
     return (total_loss / total, acc) if return_loss else acc
 
 
+def accuracy_under_attack(model, x, y, attack_fn=None, batch_size=256):
+    """Accuracy (%) của model trên (x, y) khi bị tấn công bởi attack_fn.
+
+    attack_fn(model, x, y) -> x_adv; None = đánh giá trên ảnh sạch.
+    x, y là tensor (CPU hoặc GPU); hàm tự chia batch, tự đưa lên device của model
+    và đặt model.eval(). Ví dụ:
+        accuracy_under_attack(model, x, y, lambda m, x, y: pgd(m, x, y, 8/255, 2/255, 10))
+    """
+    device = next(model.parameters()).device
+    model.eval()
+    correct = 0
+    for i in range(0, len(x), batch_size):
+        xb = x[i:i + batch_size].to(device, non_blocking=True)
+        yb = y[i:i + batch_size].to(device, non_blocking=True)
+        if attack_fn is not None:
+            xb = attack_fn(model, xb, yb)
+        with torch.no_grad():
+            correct += (model(xb).argmax(1) == yb).sum().item()
+    return 100.0 * correct / len(x)
+
+
 def save_checkpoint(path, model, optimizer=None, scheduler=None, epoch=0, best_acc=0.0, **extra):
     """Lưu trạng thái huấn luyện để resume. Ghi ra file tạm rồi đổi tên,
     tránh hỏng checkpoint nếu Colab bị ngắt giữa chừng."""
