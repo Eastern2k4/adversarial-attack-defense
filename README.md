@@ -104,9 +104,12 @@ Bộ chia sẻ được bố trí như sau:
 AdvML_Project/
 ├── checkpoints/       # Trọng số dùng chung
 ├── cifar-10-python/   # CIFAR-10 đã giải nén, nếu có
-├── results/           # Kết quả tấn công và phòng thủ
+├── results/           # Kết quả phòng thủ
+│   └── attack/        # Sáu file kết quả tấn công đã bàn giao
 └── report/            # ATTACK_HANDOFF.md, INTERFACE.md và các DOCX
 ```
+
+Bộ kết quả tấn công đã bàn giao nằm trong `AdvML_Project/results/attack/`. Khi chạy lại, notebook ghi vào `results/` của repo và sao lưu vào `AdvML_Project/results/` trên Colab; chọn `--results-dir` trỏ đến thư mục chứa trực tiếp `attack_metrics.json` khi kiểm tra.
 
 JSON giữ các khóa chung `model`, `clean_acc`, `fgsm`, `pgd`; các khóa epsilon có dạng `k/255`. Các trường bổ sung ghi ASR, thời gian, seed, thiết bị, phiên bản thư viện và SHA-256 của checkpoint/mã nguồn. Khi ghép với phần phòng thủ, dùng đúng tập đánh giá: ví dụ, Fast-AT có `clean_acc_eval_subset` cho 1.000 ảnh và `clean_acc` cho 10.000 ảnh test.
 
@@ -178,13 +181,13 @@ Khi nhóm đã gộp thay đổi vào `main`, có thể đổi `REPO_BRANCH` th�
 Sau khi cài môi trường, có thể đối chiếu số liệu mà không chạy lại benchmark:
 
 ```bash
-python scripts/verify_attack_results.py --results-dir ../AdvML_Project/results
+python scripts/verify_attack_results.py --results-dir ../AdvML_Project/results/attack
 ```
 
 Đối chiếu thêm trọng số nếu đã nhận checkpoint:
 
 ```bash
-python scripts/verify_attack_results.py --results-dir ../AdvML_Project/results --checkpoint ../AdvML_Project/checkpoints/baseline_resnet18.pth
+python scripts/verify_attack_results.py --results-dir ../AdvML_Project/results/attack --checkpoint ../AdvML_Project/checkpoints/baseline_resnet18.pth
 ```
 
 Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accuracy/ASR theo dự đoán từng ảnh, giới hạn nhiễu đã ghi, mã băm nguồn/checkpoint, định dạng notebook và các PNG. Các kiểm tra trực tiếp trước đó đã xác nhận chiều targeted, giới hạn nhiễu ở các bước PGD, gradient trọng số có sẵn, chế độ train/eval và gọi tấn công trong `torch.no_grad()`.
