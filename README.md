@@ -118,7 +118,7 @@ JSON giữ các khóa chung `model`, `clean_acc`, `fgsm`, `pgd`; các khóa epsi
 ### Chuẩn bị mã nguồn và môi trường
 
 ```bash
-git clone --branch feat/attack-code https://github.com/Eastern2k4/adversarial-attack-defense.git
+git clone https://github.com/Eastern2k4/adversarial-attack-defense.git
 cd adversarial-attack-defense
 python -m venv .venv
 ```
@@ -162,19 +162,20 @@ Kết quả mới được ghi vào `results/` của repo. Notebook lưu JSON sa
 
 ## Chạy phần tấn công trên Colab
 
-1. Mở [notebook trên nhánh feat/attack-code](https://colab.research.google.com/github/Eastern2k4/adversarial-attack-defense/blob/feat/attack-code/notebooks/02_attacks.ipynb).
-2. Bật GPU và chạy setup để mount Google Drive. Repo mới được clone từ biến `REPO_BRANCH="feat/attack-code"`.
+1. Mở [notebook trên Colab](https://colab.research.google.com/github/Eastern2k4/adversarial-attack-defense/blob/main/notebooks/02_attacks.ipynb).
+2. Bật GPU và chạy setup để mount Google Drive. Repo mới được clone từ biến `REPO_BRANCH="main"`.
 3. Đặt checkpoint trong `MyDrive/AdvML_Project/checkpoints`. Có thể đặt dữ liệu giải nén hoặc `cifar-10-python.tar.gz` trong `AdvML_Project` để notebook dùng lại.
 4. Chạy các cell còn lại. Cell cuối sao lưu các file kết quả tấn công sang `MyDrive/AdvML_Project/results`.
 
-Nếu thư mục repo đã tồn tại từ phiên trước, cập nhật và chọn đúng nhánh **trước cell imports**:
+Nếu thư mục repo đã tồn tại từ phiên trước (vd. vẫn ở nhánh `feat/attack-code` cũ), cập nhật và chọn đúng nhánh **trước cell imports**:
 
 ```python
 subprocess.run(["git", "-C", str(REPO_DIR), "fetch", "origin"], check=True)
-subprocess.run(["git", "-C", str(REPO_DIR), "switch", "feat/attack-code"], check=True)
+subprocess.run(["git", "-C", str(REPO_DIR), "switch", "main"], check=True)
+subprocess.run(["git", "-C", str(REPO_DIR), "pull"], check=True)
 ```
 
-Khi nhóm đã gộp thay đổi vào `main`, có thể đổi `REPO_BRANCH` thành `main`. Cấu hình CPU trong `requirements-attacks.txt` phục vụ đối chiếu lượt đo local; Colab cần bản torch/torchvision hỗ trợ GPU của runtime. Lượt đánh giá công bố ở trên chạy trên CPU; đường chạy Colab/GPU chưa được thực đo trong lượt bàn giao này.
+Cấu hình CPU trong `requirements-attacks.txt` phục vụ đối chiếu lượt đo local; Colab cần bản torch/torchvision hỗ trợ GPU của runtime. Lượt đánh giá công bố ở trên chạy trên CPU; đường chạy Colab/GPU chưa được thực đo trong lượt bàn giao này.
 
 ## Kiểm tra kết quả đã tải từ Drive
 
@@ -230,12 +231,27 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 └── report/
 ```
 
-| Notebook | Mục đích | Điều kiện |
-|---|---|---|
-| `01_baseline.ipynb` | Huấn luyện và đánh giá baseline | Dữ liệu CIFAR-10; bỏ qua huấn luyện nếu đã có checkpoint phù hợp |
-| `02_attacks.ipynb` | Đánh giá FGSM và PGD | Checkpoint baseline |
-| `03a_adversarial_training.ipynb` | Fast-AT hoặc PGD-AT | Dữ liệu CIFAR-10; baseline dùng khi cần so sánh |
-| `03b_preprocessing.ipynb` | JPEG, giảm bit, Gaussian blur và BPDA | Checkpoint baseline |
+**Quy ước quan trọng:** ảnh đưa vào mô hình luôn nằm trong khoảng **[0, 1]**. Chuẩn hoá mean/std được đặt **bên trong mô hình** (lớp `Normalize` đầu mạng), không nằm trong transform, để epsilon của tấn công có ý nghĩa đúng trên thang pixel (vd. ε = 8/255).
+
+| # | Notebook | Cần có trước | Tạo ra | Thời gian |
+|---|---|---|---|---|
+| 1 | `01_baseline.ipynb` | Dữ liệu CIFAR-10 | `baseline_resnet18.pth`, `results/baseline_*` | ~40 phút (T4) |
+| 2 | `02_attacks.ipynb` | `baseline_resnet18.pth` | `results/attack_*` | ~16 phút (CPU 4 luồng) |
+| 3a | `03a_adversarial_training.ipynb` (`MODE="fast"`) | – (so sánh với baseline nếu có) | `adv_fast_resnet18.pth`, `results/adv_training_fast_*`, `results/adv_fast_*` | ~1 giờ (T4) |
+| 3a | `03a_adversarial_training.ipynb` (`MODE="pgd"`) | – | `adv_pgd_resnet18.pth`, `results/adv_training_pgd_*`, `results/adv_pgd_*` | ~4–5 giờ (T4, tự resume) |
+| 3b | `03b_preprocessing.ipynb` | `baseline_resnet18.pth` | `results/preprocessing_*` | ~10 phút (T4) |
+
+Notebook 3a không phụ thuộc baseline nên có thể chạy song song với Notebook 1 (trên tài khoản/phiên Colab khác). Notebook 1 và 3a tự resume từ checkpoint `*_last.pth`; nếu đã huấn luyện đủ epoch, chạy lại chỉ thực hiện phần đánh giá.
+
+### Chạy toàn bộ dự án trên Google Colab
+
+1. Trong Google Drive, tạo thư mục `MyDrive/AdvML_Project` (notebook cũng tự tạo nếu chưa có). Checkpoint được lưu ở `MyDrive/AdvML_Project/checkpoints`.
+2. Mở notebook từ GitHub: Colab → *File → Open notebook → GitHub* → dán `https://github.com/Eastern2k4/adversarial-attack-defense` → chọn notebook.
+3. Bật GPU: *Runtime → Change runtime type → T4 GPU*.
+4. Chạy lần lượt các cell. Cell setup sẽ mount Drive, clone repo vào `/content` và thêm vào `sys.path`.
+5. Nếu runtime bị ngắt khi đang huấn luyện: kết nối lại và chạy lại từ đầu – quá trình huấn luyện tự resume từ checkpoint trên Drive.
+
+> Thư mục `results/` trên Colab nằm trong `/content` nên sẽ mất khi runtime kết thúc – nhớ tải file kết quả về rồi commit vào `results/` của repo.
 
 `requirements.txt` là danh sách thư viện chung của toàn dự án; `requirements-attacks.txt` dành cho môi trường tham chiếu phần tấn công.
 
@@ -243,5 +259,7 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 
 - A phụ trách `src/attacks.py` và `02_attacks.ipynb`; B phụ trách các notebook phòng thủ. Giữ đúng [INTERFACE.md](docs/INTERFACE.md) khi thay đổi mã dùng chung.
 - Lấy thông số thí nghiệm từ `src/config.py`. Khi ghép bảng, ghi đúng tập đánh giá, checkpoint, số bước, random start và kịch bản tấn công.
-- Xóa output notebook trước khi commit. Mã nguồn, notebook rỗng output và README được chia sẻ qua GitHub; báo cáo và bộ kết quả được bàn giao qua Drive.
-- Chia sẻ checkpoint và dữ liệu qua `AdvML_Project` trên Drive theo quy ước của nhóm; cập nhật nhánh bằng Git trước khi bắt đầu làm việc.
+- Xóa output notebook trước khi commit. Mã nguồn, notebook rỗng output, README và file kết quả trong `results/` được chia sẻ qua GitHub; DOCX báo cáo và bản sao kết quả được bàn giao qua Drive.
+- **Không commit** dữ liệu (`data/`) và trọng số (`*.pth`, `*.pt`, `checkpoints/`). Chia sẻ checkpoint và dữ liệu qua `AdvML_Project` trên Drive.
+- Kết quả cuối (JSON/CSV/PNG) được commit vào `results/` để báo cáo dùng chung một nguồn số liệu.
+- `git pull` trước khi bắt đầu làm việc; giữ lịch sử `main` tuyến tính (rebase thay vì merge commit).

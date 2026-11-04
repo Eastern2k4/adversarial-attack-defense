@@ -1,0 +1,157 @@
+{
+  "model": "baseline_resnet18",
+  "clean_acc": 94.0,
+  "fgsm": {
+    "1/255": 55.7,
+    "2/255": 38.5,
+    "4/255": 27.5,
+    "8/255": 21.8
+  },
+  "pgd": {
+    "1/255": 52.3,
+    "2/255": 8.8,
+    "4/255": 0.7,
+    "8/255": 0.0
+  },
+  "asr": {
+    "fgsm": {
+      "1/255": 40.744680851063826,
+      "2/255": 59.04255319148936,
+      "4/255": 70.74468085106383,
+      "8/255": 76.80851063829788
+    },
+    "pgd": {
+      "1/255": 44.361702127659576,
+      "2/255": 90.63829787234043,
+      "4/255": 99.25531914893617,
+      "8/255": 100.0
+    }
+  },
+  "details": {
+    "fgsm": {
+      "1/255": {
+        "correct": 557,
+        "successful_attacks_on_clean_correct": 383,
+        "generation_time_sec": 16.160258000003523,
+        "generation_time_ms_per_image": 16.160258000003523,
+        "total_eval_time_sec": 23.39950780000072,
+        "max_linf": 0.003921598196029663,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "2/255": {
+        "correct": 385,
+        "successful_attacks_on_clean_correct": 555,
+        "generation_time_sec": 16.263526200000342,
+        "generation_time_ms_per_image": 16.263526200000342,
+        "total_eval_time_sec": 23.37691260000065,
+        "max_linf": 0.007843166589736938,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "4/255": {
+        "correct": 275,
+        "successful_attacks_on_clean_correct": 665,
+        "generation_time_sec": 19.293512200001715,
+        "generation_time_ms_per_image": 19.293512200001715,
+        "total_eval_time_sec": 28.431742900000245,
+        "max_linf": 0.01568630337715149,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "8/255": {
+        "correct": 218,
+        "successful_attacks_on_clean_correct": 722,
+        "generation_time_sec": 19.48423630000252,
+        "generation_time_ms_per_image": 19.48423630000252,
+        "total_eval_time_sec": 28.868133199999647,
+        "max_linf": 0.03137257695198059,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      }
+    },
+    "pgd": {
+      "1/255": {
+        "correct": 523,
+        "successful_attacks_on_clean_correct": 417,
+        "generation_time_sec": 174.79193660000055,
+        "generation_time_ms_per_image": 174.79193660000053,
+        "total_eval_time_sec": 183.77733310000076,
+        "max_linf": 0.003921598196029663,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "2/255": {
+        "correct": 88,
+        "successful_attacks_on_clean_correct": 852,
+        "generation_time_sec": 187.57968809999693,
+        "generation_time_ms_per_image": 187.57968809999696,
+        "total_eval_time_sec": 196.08260560000053,
+        "max_linf": 0.007843166589736938,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "4/255": {
+        "correct": 7,
+        "successful_attacks_on_clean_correct": 933,
+        "generation_time_sec": 198.81454379999923,
+        "generation_time_ms_per_image": 198.81454379999923,
+        "total_eval_time_sec": 208.5025624000009,
+        "max_linf": 0.01568630337715149,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      },
+      "8/255": {
+        "correct": 0,
+        "successful_attacks_on_clean_correct": 940,
+        "generation_time_sec": 212.74023169999964,
+        "generation_time_ms_per_image": 212.74023169999967,
+        "total_eval_time_sec": 223.37462760000017,
+        "max_linf": 0.03137257695198059,
+        "pixel_min": 0.0,
+        "pixel_max": 1.0
+      }
+    }
+  },
+  "evaluation": {
+    "completed": true,
+    "dataset": "CIFAR-10 test",
+    "n_eval": 1000,
+    "seed": 42,
+    "batch_size": 128,
+    "clean_correct": 940,
+    "clean_eval_time_sec": 8.596371699999509,
+    "eval_indices_sha256": "0530a2694a87b7dc74fffe0c00ae43225ac0c8e51ca3c44c3861edd21b665fc0",
+    "accuracy_unit": "percent",
+    "asr_definition": "clean_correct_and_adversarial_wrong / clean_correct * 100",
+    "asr_undefined_value": null
+  },
+  "attack_config": {
+    "norm": "Linf",
+    "epsilons": [
+      "1/255",
+      "2/255",
+      "4/255",
+      "8/255"
+    ],
+    "targeted": false,
+    "pgd_alpha": 0.00784313725490196,
+    "pgd_steps": 10,
+    "random_start": true,
+    "restarts": 1,
+    "seed_per_attack": 42,
+    "linf_tolerance": 1e-06
+  },
+  "provenance": {
+    "checkpoint": "baseline_resnet18.pth",
+    "checkpoint_sha256": "65e7227a982a9c0582bc6ddbe9dbb9eda28fc1ed793a6b7f9f35f087a3d185e6",
+    "attacks_py_sha256": "ce771b343cf58bfd6d2ee6e6cdf691505a20473f1e0df8251366784d837bd604",
+    "device": "cpu",
+    "python": "3.14.2",
+    "torch": "2.11.0+cpu",
+    "torchvision": "0.26.0+cpu",
+    "numpy": "2.4.4",
+    "cpu_threads": 4,
+    "deterministic": true
+  }
+}

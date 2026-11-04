@@ -1,0 +1,119 @@
+{
+  "none": {
+    "model": "baseline_resnet18 + Không xử lý",
+    "transform": "none",
+    "param": null,
+    "clean_acc": 94.0,
+    "fgsm": {
+      "8/255": 21.7
+    },
+    "pgd": {
+      "8/255": 0.0
+    },
+    "pgd_bpda_8/255": 0.0
+  },
+  "jpeg_90": {
+    "model": "baseline_resnet18 + JPEG q=90",
+    "transform": "jpeg",
+    "param": 90,
+    "clean_acc": 90.4,
+    "fgsm": {
+      "8/255": 27.6
+    },
+    "pgd": {
+      "8/255": 1.3
+    },
+    "pgd_bpda_8/255": 0.3
+  },
+  "jpeg_75": {
+    "model": "baseline_resnet18 + JPEG q=75",
+    "transform": "jpeg",
+    "param": 75,
+    "clean_acc": 83.5,
+    "fgsm": {
+      "8/255": 39.8
+    },
+    "pgd": {
+      "8/255": 43.2
+    },
+    "pgd_bpda_8/255": 3.3
+  },
+  "jpeg_50": {
+    "model": "baseline_resnet18 + JPEG q=50",
+    "transform": "jpeg",
+    "param": 50,
+    "clean_acc": 76.6,
+    "fgsm": {
+      "8/255": 51.6
+    },
+    "pgd": {
+      "8/255": 62.3
+    },
+    "pgd_bpda_8/255": 8.6
+  },
+  "bit_depth_5": {
+    "model": "baseline_resnet18 + 5-bit",
+    "transform": "bit_depth",
+    "param": 5,
+    "clean_acc": 93.4,
+    "fgsm": {
+      "8/255": 22.5
+    },
+    "pgd": {
+      "8/255": 0.0
+    },
+    "pgd_bpda_8/255": 0.0
+  },
+  "bit_depth_4": {
+    "model": "baseline_resnet18 + 4-bit",
+    "transform": "bit_depth",
+    "param": 4,
+    "clean_acc": 91.4,
+    "fgsm": {
+      "8/255": 22.3
+    },
+    "pgd": {
+      "8/255": 0.0
+    },
+    "pgd_bpda_8/255": 0.0
+  },
+  "bit_depth_3": {
+    "model": "baseline_resnet18 + 3-bit",
+    "transform": "bit_depth",
+    "param": 3,
+    "clean_acc": 84.2,
+    "fgsm": {
+      "8/255": 26.9
+    },
+    "pgd": {
+      "8/255": 3.8
+    },
+    "pgd_bpda_8/255": 0.2
+  },
+  "blur_0.5": {
+    "model": "baseline_resnet18 + Blur σ=0.5",
+    "transform": "blur",
+    "param": 0.5,
+    "clean_acc": 91.1,
+    "fgsm": {
+      "8/255": 24.3
+    },
+    "pgd": {
+      "8/255": 0.1
+    },
+    "pgd_bpda_8/255": 0.2
+  },
+  "blur_1.0": {
+    "model": "baseline_resnet18 + Blur σ=1.0",
+    "transform": "blur",
+    "param": 1.0,
+    "clean_acc": 31.6,
+    "fgsm": {
+      "8/255": 26.3
+    },
+    "pgd": {
+      "8/255": 24.9
+    },
+    "pgd_bpda_8/255": 1.8
+  }
+}
