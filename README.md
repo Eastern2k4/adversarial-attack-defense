@@ -83,6 +83,48 @@ Chi phí tạo nhiễu tại epsilon 8/255, cho cùng 1.000 ảnh:
 
 Toàn bộ lượt chạy notebook mất khoảng **15,6 phút**. Thời gian này phụ thuộc phần cứng và batch size. Kết quả hiện tại mô tả PGD-10 với một khởi tạo; chúng không chứng minh độ bền vững trước mọi tấn công. API hỗ trợ targeted đã được kiểm tra về chiều gradient; bảng trên là benchmark untargeted.
 
+### Tấn công có mục tiêu
+
+[notebooks/02b_targeted_attack.ipynb](notebooks/02b_targeted_attack.ipynb) dùng PGD-10 targeted trên baseline, cùng tập 1.000 ảnh:
+
+| ε | Mèo → chó (91 ảnh cat) | Mèo bị đoán sai bất kỳ | Nhãn đích ngẫu nhiên (940 ảnh) | Untargeted ASR |
+|---|---:|---:|---:|---:|
+| 1/255 | 34,1% | 72,5% | 8,1% | 44,4% |
+| 2/255 | 90,1% | 96,7% | 54,3% | 90,6% |
+| 4/255 | 100,0% | 100,0% | 94,5% | 99,3% |
+| 8/255 | 100,0% | 100,0% | 99,8% | 100,0% |
+
+Ở ε nhỏ, targeted khó hơn rõ rệt so với untargeted vì phải vượt qua đúng một ranh giới quyết định. Cặp mèo → chó dễ hơn nhãn đích ngẫu nhiên vì *dog* là lớp gần *cat* nhất. Đến ε = 8/255, kẻ tấn công gần như luôn ép được baseline trả về đúng nhãn mình chọn. Kết quả lưu trong `results/targeted_metrics.json`, `targeted_success.png` và `targeted_examples_cat_to_dog.png`.
+
+## Kết quả phòng thủ
+
+Hai nhóm biện pháp phòng thủ được đánh giá trên cùng 1.000 ảnh test (seed 42), ε = 8/255, white-box:
+
+- **Adversarial Training** ([03a](notebooks/03a_adversarial_training.ipynb)): ResNet-18 huấn luyện từ đầu 30 epoch trên ảnh đối kháng, theo Fast-AT (FGSM có random start, α = 10/255) và PGD-AT (PGD-7, α = 2/255). Checkpoint được chọn theo PGD-10 accuracy trên tập đánh giá.
+- **Tiền xử lý đầu vào** ([03b](notebooks/03b_preprocessing.ipynb)): JPEG, giảm bit màu, Gaussian blur đặt trước baseline, đo với kẻ tấn công không biết phòng thủ và kẻ tấn công thích nghi (BPDA).
+
+| Phương pháp | Sạch (10k test) | Sạch (1k) | FGSM | PGD-10 | PGD-20 | Tấn công thích nghi | Huấn luyện (giây/epoch) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Baseline | 93,8 | 94,0 | 21,7 | 0,0 | 0,0 | 0,0 | – |
+| Fast-AT | 84,2 | 84,3 | 55,3 | 48,2 | 46,7 | 46,7 | 63 |
+| PGD-AT | 81,0 | 81,3 | 55,2 | **51,0** | **49,5** | **49,5** | 219 |
+| Baseline + JPEG q=75 | – | 83,5 | 39,8 | 43,2 | – | 3,3 | 0 |
+| Baseline + JPEG q=50 | – | 76,6 | 51,6 | 62,3 | – | 8,6 | 0 |
+| Baseline + 3-bit | – | 84,2 | 26,9 | 3,8 | – | 0,2 | 0 |
+| Baseline + Blur σ=1,0 | – | 31,6 | 26,3 | 24,9 | – | 1,8 | 0 |
+
+Bảng đầy đủ (mọi cấu hình tiền xử lý, chi phí suy luận) nằm trong [results/summary_comparison.md](results/summary_comparison.md). Với tiền xử lý, FGSM/PGD-10 được sinh trên baseline rồi mới đi qua bước tiền xử lý; cột "thích nghi" là PGD-10 + BPDA tấn công trực tiếp `f(g(x))`. Với baseline/AT, tấn công vốn đã nhắm trực tiếp vào mô hình nên PGD-20 chính là tấn công thích nghi. Số liệu baseline trong bảng này lấy từ cùng lượt đánh giá với AT; lượt đo riêng của phần tấn công lệch ≤ 0,1 điểm.
+
+![Đánh đổi accuracy sạch và độ bền vững](results/summary_tradeoff.png)
+
+Nhận xét chính:
+
+- **Adversarial Training là biện pháp duy nhất bền vững thật**: PGD-AT nâng accuracy dưới PGD-20 từ 0% lên 49,5%, đổi lại accuracy sạch giảm khoảng 13 điểm. Fast-AT đạt gần như tương đương (46,7%) với chi phí huấn luyện chỉ bằng khoảng 1/3,5. Không xuất hiện catastrophic overfitting.
+- **Tiền xử lý chỉ tạo cảm giác an toàn giả**: JPEG q=50 trông như chống được PGD (62,3%), nhưng khi kẻ tấn công biết có bước JPEG và dùng BPDA, accuracy rơi còn 8,6%. Đây là hiện tượng gradient masking/obfuscation (Athalye et al., 2018).
+- Phép biến đổi càng mạnh thì accuracy sạch càng giảm (Blur σ=1,0 còn 31,6%), trong khi không mang lại độ bền vững trước tấn công thích nghi.
+
+Bảng và biểu đồ được tạo lại từ các file JSON bằng `python scripts/make_summary_figures.py`; chi phí suy luận đo bằng `python scripts/measure_inference_cost.py`.
+
 ## Kết quả và báo cáo trên Google Drive
 
 Mã nguồn và README được chia sẻ qua GitHub. Tài liệu bàn giao, DOCX và các file kết quả được tổ chức riêng trong thư mục `AdvML_Project` để chia sẻ qua Google Drive.
@@ -204,8 +246,12 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 | Số liệu và biểu đồ cho tối thiểu hai tấn công | Đạt; đã đo đủ tám cấu hình FGSM/PGD |
 | Minh họa ảnh gốc, nhiễu và ảnh đối kháng | Đạt; hai bộ PNG kèm nhãn và confidence |
 | Hướng dẫn tái lập và kiểm tra kết quả | Có notebook, môi trường tham chiếu và script kiểm tra |
-| Adversarial Training và biện pháp phòng thủ thứ hai | Thành viên B phụ trách; có notebook Fast-AT/PGD-AT và preprocessing, kết quả chia sẻ qua Drive |
-| Báo cáo tổng hợp toàn dự án | Cần ghép kết quả A/B, phân tích đánh đổi và hoàn thiện bản báo cáo cuối |
+| Adversarial Training (bắt buộc) | Đạt; Fast-AT và PGD-AT, đánh giá trên ảnh sạch, FGSM, PGD-10 và PGD-20 |
+| Biện pháp phòng thủ thứ hai | Đạt; JPEG, giảm bit màu, Gaussian blur, có đánh giá kẻ tấn công thích nghi (BPDA) |
+| Bảng so sánh đánh đổi robustness và accuracy | Đạt; `results/summary_comparison.md`, `summary_tradeoff.png`, `summary_robustness_eps.png` |
+| Targeted attack (nâng cao) | Có notebook `02b_targeted_attack.ipynb` (mèo → chó, nhãn đích ngẫu nhiên) |
+| Notebook demo | `04_demo.ipynb`, chỉ nạp checkpoint, chạy vài giây trên CPU |
+| Báo cáo tổng hợp toàn dự án | Đang hoàn thiện |
 | C&W, chuyển giao giữa kiến trúc, tấn công vật lý | Phần mở rộng tùy chọn; chưa benchmark trong bộ kết quả này |
 
 ## Cấu trúc và thứ tự chạy dự án
@@ -214,8 +260,10 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 ├── notebooks/
 │   ├── 01_baseline.ipynb
 │   ├── 02_attacks.ipynb
+│   ├── 02b_targeted_attack.ipynb
 │   ├── 03a_adversarial_training.ipynb
-│   └── 03b_preprocessing.ipynb
+│   ├── 03b_preprocessing.ipynb
+│   └── 04_demo.ipynb
 ├── src/
 │   ├── config.py
 │   ├── models.py
@@ -224,7 +272,10 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 │   ├── defenses.py
 │   └── utils.py
 ├── docs/INTERFACE.md
-├── scripts/verify_attack_results.py
+├── scripts/
+│   ├── verify_attack_results.py
+│   ├── make_summary_figures.py
+│   └── measure_inference_cost.py
 ├── requirements.txt
 ├── requirements-attacks.txt
 ├── results/
@@ -239,7 +290,11 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 | 2 | `02_attacks.ipynb` | `baseline_resnet18.pth` | `results/attack_*` | ~16 phút (CPU 4 luồng) |
 | 3a | `03a_adversarial_training.ipynb` (`MODE="fast"`) | – (so sánh với baseline nếu có) | `adv_fast_resnet18.pth`, `results/adv_training_fast_*`, `results/adv_fast_*` | ~1 giờ (T4) |
 | 3a | `03a_adversarial_training.ipynb` (`MODE="pgd"`) | – | `adv_pgd_resnet18.pth`, `results/adv_training_pgd_*`, `results/adv_pgd_*` | ~4–5 giờ (T4, tự resume) |
+| 2b | `02b_targeted_attack.ipynb` | `baseline_resnet18.pth` | `results/targeted_*` | ~15 phút (CPU 4 luồng) |
 | 3b | `03b_preprocessing.ipynb` | `baseline_resnet18.pth` | `results/preprocessing_*` | ~10 phút (T4) |
+| – | `scripts/make_summary_figures.py` | Các file JSON trong `results/` | `results/summary_*`, hai biểu đồ so sánh | vài giây |
+| – | `scripts/measure_inference_cost.py` | Dữ liệu CIFAR-10 | `results/inference_cost.json` | ~1 phút (CPU) |
+| 4 | `04_demo.ipynb` | Checkpoint baseline, PGD-AT (Fast-AT tùy chọn) | Chỉ hiển thị, không ghi file | vài giây mỗi cell |
 
 Notebook 3a không phụ thuộc baseline nên có thể chạy song song với Notebook 1 (trên tài khoản/phiên Colab khác). Notebook 1 và 3a tự resume từ checkpoint `*_last.pth`; nếu đã huấn luyện đủ epoch, chạy lại chỉ thực hiện phần đánh giá.
 

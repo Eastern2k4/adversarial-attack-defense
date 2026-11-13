@@ -1,0 +1,57 @@
+{
+  "note": "CPU (AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD), 4 luồng, batch 128, 1000 ảnh, trung vị 7 lần đo luân phiên; Fast-AT/PGD-AT cùng kiến trúc với baseline nên cùng chi phí suy luận.",
+  "weights": "baseline_resnet18.pth",
+  "device": "cpu",
+  "threads": 4,
+  "batch_size": 128,
+  "n_images": 1000,
+  "repeats": 7,
+  "torch": "2.5.1+cpu",
+  "python": "3.11.17",
+  "results": {
+    "Baseline": {
+      "ms_per_image": 3.0557643999927677,
+      "overhead_vs_baseline_pct": 0.0
+    },
+    "jpeg_90": {
+      "ms_per_image": 3.1612644999986514,
+      "overhead_vs_baseline_pct": 3.452494570789999
+    },
+    "jpeg_75": {
+      "ms_per_image": 3.1735081000078935,
+      "overhead_vs_baseline_pct": 3.853166821872933
+    },
+    "jpeg_50": {
+      "ms_per_image": 3.1272797000128776,
+      "overhead_vs_baseline_pct": 2.3403407677725196
+    },
+    "bit_depth_5": {
+      "ms_per_image": 3.089986199978739,
+      "overhead_vs_baseline_pct": 1.119909636556149
+    },
+    "bit_depth_4": {
+      "ms_per_image": 3.1009973000036553,
+      "overhead_vs_baseline_pct": 1.480248281280927
+    },
+    "bit_depth_3": {
+      "ms_per_image": 3.040010600001551,
+      "overhead_vs_baseline_pct": -0.5155436718633721
+    },
+    "blur_0.5": {
+      "ms_per_image": 3.0979021999810357,
+      "overhead_vs_baseline_pct": 1.3789610216143444
+    },
+    "blur_1.0": {
+      "ms_per_image": 3.135211699991487,
+      "overhead_vs_baseline_pct": 2.5999157526315653
+    },
+    "Fast-AT": {
+      "ms_per_image": 3.0557643999927677,
+      "overhead_vs_baseline_pct": 0.0
+    },
+    "PGD-AT": {
+      "ms_per_image": 3.0557643999927677,
+      "overhead_vs_baseline_pct": 0.0
+    }
+  }
+}
