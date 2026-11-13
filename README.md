@@ -294,7 +294,7 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 | 3b | `03b_preprocessing.ipynb` | `baseline_resnet18.pth` | `results/preprocessing_*` | ~10 phút (T4) |
 | – | `scripts/make_summary_figures.py` | Các file JSON trong `results/` | `results/summary_*`, hai biểu đồ so sánh | vài giây |
 | – | `scripts/measure_inference_cost.py` | Dữ liệu CIFAR-10 | `results/inference_cost.json` | ~1 phút (CPU) |
-| 4 | `04_demo.ipynb` | Checkpoint baseline, PGD-AT (Fast-AT tùy chọn) | Chỉ hiển thị, không ghi file | vài giây mỗi cell |
+| 4 | `04_demo.ipynb` | Checkpoint baseline, PGD-AT (Fast-AT tùy chọn); tập đánh giá đọc từ `assets/eval_subset_seed42.npz`, không cần tải CIFAR-10 | Chỉ hiển thị, không ghi file | vài giây mỗi cell |
 
 Notebook 3a không phụ thuộc baseline nên có thể chạy song song với Notebook 1 (trên tài khoản/phiên Colab khác). Notebook 1 và 3a tự resume từ checkpoint `*_last.pth`; nếu đã huấn luyện đủ epoch, chạy lại chỉ thực hiện phần đánh giá.
 
