@@ -141,46 +141,94 @@ def summary_eps_plot(models):
 
 
 def summary_tradeoff_plot(models, pre):
-    fig, ax = plt.subplots(figsize=(9, 6))
-    # Tiền xử lý: rỗng = PGD chuyển từ baseline (kẻ tấn công không biết), đặc = PGD-BPDA (thích nghi)
-    for key, r in pre.items():
-        if key == "none":
-            continue
-        x, y_naive, y_bpda = r["clean_acc"], r["pgd"]["8/255"], r["pgd_bpda_8/255"]
-        c = COLOR["Preprocessing"]
-        ax.plot([x, x], [y_naive, y_bpda], color=c, linewidth=1.2, alpha=.6, zorder=2)
-        ax.scatter([x], [y_naive], s=55, facecolor="white", edgecolor=c, linewidth=2, zorder=3)
-        ax.scatter([x], [y_bpda], s=55, color=c, edgecolor="white", linewidth=1.5, zorder=4)
-        if y_naive - y_bpda > 5:
-            ax.annotate(pre_label(r), (x, y_naive), xytext=(7, 0), textcoords="offset points",
-                        va="center", fontsize=8.5, color=INK2)
-    # Baseline và AT: accuracy dưới PGD-20 (tấn công mạnh nhất đã đo)
-    label_pos = {"Baseline": ((-25, 45), "center"), "Fast-AT": ((10, -4), "left"), "PGD-AT": ((-4, 12), "left")}
-    for name, res in models.items():
-        x, y = res["clean_acc_eval_subset"], res["pgd20"]["8/255"]
-        ax.scatter([x], [y], s=110, marker="D", color=COLOR[name], edgecolor="white", linewidth=1.5, zorder=5)
-        offset, ha = label_pos[name]
-        arrow = dict(arrowstyle="-", color=INK2, lw=0.8) if name == "Baseline" else None
-        ax.annotate(f"{name}\nsạch {x:.1f}% · PGD-20 {y:.1f}%", (x, y), xytext=offset,
-                    textcoords="offset points", fontsize=9, color=INK, va="bottom", ha=ha,
-                    arrowprops=arrow)
-    # Chú giải
+    """Hai khung: trái = toàn cảnh; phải = phóng to vùng các cấu hình tiền xử lý dồn sát đáy."""
     from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+
+    c = COLOR["Preprocessing"]
+    ZOOM = (82.5, 95.5, -1.2, 5.0)  # x0, x1, y0, y1 của vùng phóng to
+    fig, (ax, az) = plt.subplots(1, 2, figsize=(13.5, 6), gridspec_kw={"width_ratios": [1.45, 1]})
+
+    def draw_pre(a, big):
+        # rỗng (lớn) = PGD chuyển từ baseline; đặc (nhỏ, nằm trong vòng rỗng nếu trùng) = PGD-BPDA
+        for key, r in pre.items():
+            if key == "none":
+                continue
+            x, yn, yb = r["clean_acc"], r["pgd"]["8/255"], r["pgd_bpda_8/255"]
+            a.plot([x, x], [yn, yb], color=c, linewidth=1.2, alpha=.6, zorder=2)
+            a.scatter([x], [yn], s=110 if big else 70, facecolor="white", edgecolor=c, linewidth=2, zorder=3)
+            a.scatter([x], [yb], s=34 if big else 30, color=c, zorder=4)
+
+    def draw_models(a):
+        for name, res in models.items():
+            a.scatter([res["clean_acc_eval_subset"]], [res["pgd20"]["8/255"]], s=120, marker="D",
+                      color=COLOR[name], edgecolor="white", linewidth=1.5, zorder=5)
+
+    # ---- Khung trái: toàn cảnh
+    draw_pre(ax, big=False)
+    draw_models(ax)
+    for key in ("jpeg_50", "jpeg_75", "blur_1.0"):
+        r = pre[key]
+        ax.annotate(pre_label(r), (r["clean_acc"], r["pgd"]["8/255"]), xytext=(8, 0), textcoords="offset points",
+                    va="center", fontsize=9, color=INK)
+    label_pos = {"Fast-AT": ((10, -4), "left"), "PGD-AT": ((-4, 12), "left")}
+    for name, (offset, ha) in label_pos.items():
+        res = models[name]
+        x, y = res["clean_acc_eval_subset"], res["pgd20"]["8/255"]
+        ax.annotate(f"{name}\nsạch {x:.1f}% · PGD-20 {y:.1f}%", (x, y), xytext=offset,
+                    textcoords="offset points", fontsize=9, color=INK, va="bottom", ha=ha)
+    x0, x1, y0, y1 = ZOOM
+    ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=INK2, lw=1, ls="--", zorder=6))
+    ax.annotate("phóng to ở khung phải →\n(Baseline và 6 điểm sát đáy)", (x1, y1), xytext=(-6, 34),
+                textcoords="offset points", ha="right", fontsize=8.5, color=INK2,
+                arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
     handles = [
         Line2D([], [], marker="D", ls="", color=COLOR["Baseline"], markersize=8, label="Baseline (PGD-20)"),
         Line2D([], [], marker="D", ls="", color=COLOR["Fast-AT"], markersize=8, label="Fast-AT (PGD-20)"),
         Line2D([], [], marker="D", ls="", color=COLOR["PGD-AT"], markersize=8, label="PGD-AT (PGD-20)"),
-        Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor=COLOR["Preprocessing"],
-               markeredgewidth=2, markersize=7, label="Tiền xử lý – PGD chuyển từ baseline"),
-        Line2D([], [], marker="o", ls="", color=COLOR["Preprocessing"], markersize=7,
-               label="Tiền xử lý – PGD-BPDA (kẻ tấn công thích nghi)"),
+        Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor=c, markeredgewidth=2,
+               markersize=8, label="Tiền xử lý – kẻ tấn công không biết phòng thủ"),
+        Line2D([], [], marker="o", ls="", color=c, markersize=6, label="Tiền xử lý – kẻ tấn công thích nghi (BPDA)"),
     ]
     ax.legend(handles=handles, frameon=False, fontsize=9, loc="upper left")
     ax.set_xlim(25, 100); ax.set_ylim(-2, 70)
     ax.set_xlabel("Accuracy trên ảnh sạch (%)", color=INK2)
     ax.set_ylabel("Accuracy dưới tấn công, ε = 8/255 (%)", color=INK2)
-    ax.set_title("Đánh đổi: accuracy sạch và độ bền vững (1.000 ảnh test)", loc="left", fontsize=12, color=INK)
+    ax.set_title("Toàn cảnh", loc="left", fontsize=11, color=INK)
     style_axes(ax)
+
+    # ---- Khung phải: phóng to, gắn nhãn từng điểm bằng đường dẫn
+    draw_pre(az, big=True)
+    draw_models(az)
+    b = models["Baseline"]
+    # (khóa, vị trí nhãn x, y) – đặt nhãn so le để không chồng nhau
+    labels = [
+        ("jpeg_75", 83.0, 4.55, "JPEG q=75 (BPDA 3,3%;\nkhông biết: 43,2% – ngoài khung)"),
+        ("bit_depth_3", 85.6, 2.35, None),
+        ("jpeg_90", 88.2, 3.15, None),
+        ("blur_0.5", 90.0, 4.1, None),
+        ("bit_depth_4", 89.2, -0.85, None),
+        ("bit_depth_5", 92.1, 1.75, None),
+    ]
+    for key, lx, ly, text in labels:
+        r = pre[key]
+        x, yn, yb = r["clean_acc"], r["pgd"]["8/255"], r["pgd_bpda_8/255"]
+        txt = text or f"{pre_label(r)}  ({yn:.1f}% → {yb:.1f}%)".replace(".", ",")
+        tgt_y = yb if key == "jpeg_75" else yn
+        az.annotate(txt, (x, tgt_y), xytext=(lx, ly), textcoords="data", fontsize=8.5, color=INK,
+                    ha="left", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.7, shrinkB=6))
+    az.annotate("Baseline (94,0% · 0,0%)", (b["clean_acc_eval_subset"], b["pgd20"]["8/255"]),
+                xytext=(93.0, 3.0), textcoords="data", fontsize=8.5, color=INK, ha="left", va="center",
+                arrowprops=dict(arrowstyle="-", color=INK2, lw=0.7, shrinkB=7))
+    az.set_xlim(x0, x1); az.set_ylim(y0, y1); az.set_yticks(range(0, 6))
+    az.set_xlabel("Accuracy trên ảnh sạch (%)", color=INK2)
+    az.set_title("Phóng to vùng sát đáy · nhãn: không biết → BPDA", loc="left", fontsize=11, color=INK)
+    style_axes(az)
+    for side in ("left", "bottom", "top", "right"):
+        az.spines[side].set_visible(True); az.spines[side].set_color(INK2); az.spines[side].set_linestyle("--")
+
+    fig.suptitle("Đánh đổi: accuracy sạch và độ bền vững (ε = 8/255, 1.000 ảnh test)", x=0.01, ha="left",
+                 fontsize=12.5, color=INK)
     plt.tight_layout()
     out = RES / "summary_tradeoff.png"
     plt.savefig(out, dpi=150, bbox_inches="tight")
