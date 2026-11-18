@@ -251,7 +251,7 @@ Script kiểm tra chữ ký hàm, tập chỉ số test seed 42, JSON/CSV, accur
 | Bảng so sánh đánh đổi robustness và accuracy | Đạt; `results/summary_comparison.md`, `summary_tradeoff.png`, `summary_robustness_eps.png` |
 | Targeted attack (nâng cao) | Có notebook `02b_targeted_attack.ipynb` (mèo → chó, nhãn đích ngẫu nhiên) |
 | Notebook demo | `04_demo.ipynb`, chỉ nạp checkpoint, chạy vài giây trên CPU |
-| Báo cáo tổng hợp toàn dự án | Đang hoàn thiện |
+| Báo cáo tổng hợp toàn dự án | Đạt; `report/BaoCao_AdvML_DeTai2.21.docx` và bản PDF |
 | C&W, chuyển giao giữa kiến trúc, tấn công vật lý | Phần mở rộng tùy chọn; chưa benchmark trong bộ kết quả này |
 
 ## Cấu trúc và thứ tự chạy dự án
